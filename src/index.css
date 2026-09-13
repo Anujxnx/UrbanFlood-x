@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F6FAF8;
+    color: #092328;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Scrollbar hides */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom Leaflet Map styling resets for HydroCommand design */
+.leaflet-container {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
+  background-color: #EAF2ED !important;
+  border-radius: 1.25rem !important;
+}
+
+.custom-risk-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-report-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background-color: #ffffff !important;
+  color: #092328 !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 10px 25px -5px rgba(9, 35, 40, 0.15) !important;
+  padding: 4px !important;
+  border: 1px solid rgba(139, 187, 146, 0.3) !important;
+}
+
+.leaflet-popup-tip {
+  background-color: #ffffff !important;
+}
+
+/* Material Symbols alignment helper */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
