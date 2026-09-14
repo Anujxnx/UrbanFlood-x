@@ -9,6 +9,8 @@ import { rainfallService } from '../services/rainfallService';
 import { predictionService } from '../services/predictionService';
 import { drainageService } from '../services/drainageService';
 import { reportService } from '../services/reportService';
+import { weatherService } from '../services/weatherService';
+import { imdNowcastService } from '../services/imdNowcastService';
 import { 
   Droplets, 
   Map as MapIcon, 
@@ -31,6 +33,8 @@ export const Dashboard = () => {
   const [selectedArea, setSelectedArea] = useState(null);
   const [rainfall, setRainfall] = useState(null);
   const [prediction, setPrediction] = useState(null);
+  const [currentWeather, setCurrentWeather] = useState(null);
+  const [nowcastWarning, setNowcastWarning] = useState(null);
   const [roads, setRoads] = useState([]);
   const [drainage, setDrainage] = useState([]);
   const [alerts, setAlerts] = useState([]);
@@ -62,13 +66,15 @@ export const Dashboard = () => {
       const defaultArea = areaList[0]; // Lachit Nagar
       setSelectedArea(defaultArea);
 
-      const [rainData, predData, roadsData, drainData, alertsData, reportsData] = await Promise.all([
+      const [rainData, predData, roadsData, drainData, alertsData, reportsData, wxData, nowcastData] = await Promise.all([
         rainfallService.getRainfallByArea(defaultArea.id),
         predictionService.predict(defaultArea.id),
         drainageService.getRoads(),
         drainageService.getDrainageNetwork(),
         drainageService.getAlerts(),
-        reportService.getReports()
+        reportService.getReports(),
+        weatherService.getCurrentWeather(),
+        imdNowcastService.getDistrictNowcast('310')
       ]);
 
       setRainfall(rainData);
@@ -77,6 +83,8 @@ export const Dashboard = () => {
       setDrainage(drainData);
       setAlerts(alertsData);
       setReports(reportsData);
+      setCurrentWeather(wxData);
+      setNowcastWarning(nowcastData);
     } catch (err) {
       console.error('Error loading dashboard data:', err);
     } finally {
@@ -98,6 +106,12 @@ export const Dashboard = () => {
       ]);
       setRainfall(rainData);
       setPrediction(predData);
+      if (rainData?.current_weather) {
+        setCurrentWeather(rainData.current_weather);
+      }
+      if (predData?.nowcast_telemetry) {
+        setNowcastWarning(predData.nowcast_telemetry);
+      }
     } catch (err) {
       console.error('Error updating area metrics:', err);
     }
@@ -233,6 +247,24 @@ export const Dashboard = () => {
                 </div>
               </div>
 
+              {/* IMD Live Synoptic Weather Observation Strip */}
+              {currentWeather && (
+                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#F6FAF8] border border-brand-sage/20 text-[11px] text-brand-ink/70">
+                  <div className="flex items-center gap-1.5 font-medium truncate">
+                    <span className="w-2 h-2 rounded-full bg-brand-emerald animate-pulse shrink-0"></span>
+                    <span className="font-semibold text-brand-ink shrink-0">IMD {currentWeather.station_id || '42410'}:</span>
+                    <span>{currentWeather.temperature ?? 28.4}°C</span>
+                    <span className="text-brand-ink/40">·</span>
+                    <span>{currentWeather.humidity ?? 86}% RH</span>
+                    <span className="text-brand-ink/40">·</span>
+                    <span className="truncate">{currentWeather.wind_speed ?? 14.5} km/h {currentWeather.wind_direction || 'ENE'}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-[10px] font-semibold text-brand-teal shrink-0 pl-2">
+                    <span>24h: {currentWeather.rainfall_24h ?? 58.4} mm</span>
+                  </div>
+                </div>
+              )}
+
               {/* Deploy Action Button */}
               <button
                 onClick={handleDeployUnit}
@@ -303,6 +335,19 @@ export const Dashboard = () => {
                   reports={reports}
                 />
 
+                {/* IMD District Nowcast Alert Badge */}
+                {nowcastWarning && (
+                  <div className="absolute top-2 left-2 z-20 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-brand-sage/30 flex items-center gap-1.5 text-[10px] font-semibold text-brand-ink shadow-sm pointer-events-none max-w-[200px] sm:max-w-xs truncate">
+                    <span 
+                      className="w-1.5 h-1.5 rounded-full shrink-0" 
+                      style={{ backgroundColor: nowcastWarning.severity_color || '#f97316' }}
+                    ></span>
+                    <span className="truncate">
+                      IMD Nowcast: {nowcastWarning.warning_severity} ({nowcastWarning.rainfall_intensity_category?.split(':')[0] || 'Convective Rain'})
+                    </span>
+                  </div>
+                )}
+
                 {/* Sluice Status Badge */}
                 <div className="absolute top-2 right-2 z-20 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-brand-sage/30 flex items-center gap-1.5 text-[10px] font-semibold text-brand-ink shadow-sm pointer-events-none">
                   <span className="w-1.5 h-1.5 rounded-full bg-brand-emerald animate-pulse"></span>
@@ -320,8 +365,14 @@ export const Dashboard = () => {
                   <h3 className="text-sm font-bold text-brand-ink">Inundation Timeline</h3>
                   <p className="text-[11px] text-brand-ink/50">Next 3 hours AI predictive curve</p>
                 </div>
-                <span className="text-xs font-semibold text-brand-teal bg-[#E8F3ED] px-2.5 py-0.5 rounded-full">
-                  Peak +3h
+                <span 
+                  className="text-xs font-semibold px-2.5 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: nowcastWarning ? `${nowcastWarning.severity_color}15` : '#E8F3ED',
+                    color: nowcastWarning ? nowcastWarning.severity_color : '#12544F'
+                  }}
+                >
+                  {nowcastWarning ? `${nowcastWarning.warning_severity} Alert · Peak +3h` : 'Peak +3h'}
                 </span>
               </div>
 
@@ -347,19 +398,19 @@ export const Dashboard = () => {
 
                 <div className="flex justify-between items-center text-[11px] pt-2 border-t border-brand-sage/15 text-brand-ink/70">
                   <div className="flex flex-col items-center">
-                    <span className="font-bold text-brand-ink">42%</span>
+                    <span className="font-bold text-brand-ink">{prediction?.timeline_forecast?.[0]?.prob ?? 42}%</span>
                     <span className="text-[10px] text-brand-ink/40 mt-0.5">Now</span>
                   </div>
                   <div className="flex flex-col items-center">
-                    <span className="font-medium">61%</span>
+                    <span className="font-medium">{prediction?.timeline_forecast?.[1]?.prob ?? 61}%</span>
                     <span className="text-[10px] text-brand-ink/40 mt-0.5">+1 hr</span>
                   </div>
                   <div className="flex flex-col items-center">
-                    <span className="font-medium text-brand-teal">78%</span>
+                    <span className="font-medium text-brand-teal">{prediction?.timeline_forecast?.[2]?.prob ?? 78}%</span>
                     <span className="text-[10px] text-brand-ink/40 mt-0.5">+2 hr</span>
                   </div>
                   <div className="flex flex-col items-center">
-                    <span className="font-bold text-brand-teal">86%</span>
+                    <span className="font-bold text-brand-teal">{prediction?.timeline_forecast?.[3]?.prob ?? 86}%</span>
                     <span className="text-[10px] text-brand-teal font-semibold mt-0.5">+3 hr</span>
                   </div>
                 </div>

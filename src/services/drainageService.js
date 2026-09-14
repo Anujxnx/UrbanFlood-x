@@ -1,5 +1,6 @@
 import { supabase, isDemoMode } from '../lib/supabase';
 import { DEMO_ROADS, DEMO_DRAINAGE, DEMO_ALERTS } from '../data/demoData';
+import { imdNowcastService } from './imdNowcastService';
 
 export const drainageService = {
   async getRoads() {
@@ -35,7 +36,27 @@ export const drainageService = {
   },
 
   async getAlerts() {
-    if (isDemoMode) return DEMO_ALERTS;
+    let nowcastAlert = null;
+    try {
+      const nowcast = await imdNowcastService.getDistrictNowcast('310');
+      if (nowcast && nowcast.isActive) {
+        nowcastAlert = {
+          id: `imd-nowcast-${nowcast.district_id}`,
+          area_name: `Dibrugarh (${nowcast.rainfall_intensity_category})`,
+          severity: nowcast.warning_severity.toUpperCase() === 'RED' ? 'CRITICAL' : 'HIGH',
+          message: nowcast.warning_message,
+          created_at: nowcast.issue_time,
+          isNowcast: true,
+          severityColor: nowcast.severity_color
+        };
+      }
+    } catch (e) {
+      console.warn('Could not load nowcast alert:', e);
+    }
+
+    if (isDemoMode) {
+      return nowcastAlert ? [nowcastAlert, ...DEMO_ALERTS] : DEMO_ALERTS;
+    }
 
     try {
       const { data, error } = await supabase
@@ -44,18 +65,23 @@ export const drainageService = {
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      if (error || !data || data.length === 0) return DEMO_ALERTS;
+      if (error || !data || data.length === 0) {
+        return nowcastAlert ? [nowcastAlert, ...DEMO_ALERTS] : DEMO_ALERTS;
+      }
 
-      return data.map(a => ({
+      const list = data.map(a => ({
         id: a.id,
         area_name: a.areas?.name || 'Dibrugarh Sector',
         severity: a.severity,
         message: a.message,
         created_at: a.created_at
       }));
+
+      return nowcastAlert ? [nowcastAlert, ...list] : list;
     } catch (e) {
       console.error('Error fetching alerts:', e);
-      return DEMO_ALERTS;
+      return nowcastAlert ? [nowcastAlert, ...DEMO_ALERTS] : DEMO_ALERTS;
     }
   }
 };
+

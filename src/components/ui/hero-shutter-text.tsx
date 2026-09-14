@@ -10,7 +10,7 @@ export interface HeroTextProps {
 }
 
 export function HeroText({
-  text = "HYDRO COMMAND",
+  text = "URBAN FLOOD-X",
   className = "",
 }: HeroTextProps) {
   const [count, setCount] = useState(0);

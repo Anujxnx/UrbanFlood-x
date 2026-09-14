@@ -49,6 +49,36 @@ export const Landing = () => {
         title: "Dibrugarh West Sector",
         content: "HIGH RISK (68%) | Mankotta Road Accumulation",
       },
+    },
+    {
+      id: 5,
+      position: [27.4350, 94.8520], // Barbaruah Chuk
+      color: "gold",
+      size: "medium",
+      popup: {
+        title: "Barbaruah Chuk",
+        content: "MEDIUM RISK (54%) | Roadside Culvert Debris Monitoring",
+      },
+    },
+    {
+      id: 6,
+      position: [27.4610, 95.0320], // Panitola
+      color: "green",
+      size: "medium",
+      popup: {
+        title: "Panitola Outer Sector",
+        content: "LOW RISK (15%) | Normal Elevation & Drainage Flow",
+      },
+    },
+    {
+      id: 7,
+      position: [27.4795, 94.9180], // Chowkidinghee
+      color: "gold",
+      size: "medium",
+      popup: {
+        title: "Chowkidinghee Junction",
+        content: "MEDIUM RISK (48%) | Roundabout Drainage Outlet Flow",
+      },
     }
   ]);
 
@@ -95,7 +125,7 @@ export const Landing = () => {
 
           {/* DYNAMIC SHUTTER HERO TEXT */}
           <div className="w-full my-2">
-            <HeroText text="HYDRO COMMAND" />
+            <HeroText text="URBAN FLOOD-X" />
           </div>
 
           <p className="text-xl sm:text-2xl font-bold text-brand-teal tracking-wide uppercase">
