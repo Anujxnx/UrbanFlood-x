@@ -23,12 +23,27 @@ export const Login = () => {
     setError(null);
 
     try {
-      await signIn({ email, password });
-      navigate('/dashboard');
+      const res = await signIn({ email, password });
+      const userRole = res?.user?.user_metadata?.role || res?.role || (email.toLowerCase().includes('officer') || email.toLowerCase().includes('gov') || email.toLowerCase().includes('municipal') ? 'MUNICIPAL_AUTHORITY' : 'CITIZEN');
+      if (userRole === 'MUNICIPAL_AUTHORITY') {
+        navigate('/municipal');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.message || 'Unable to sign in. Please verify your credentials.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fillDemoAccount = (accountType) => {
+    if (accountType === 'municipal') {
+      setEmail('officer@dibrugarh.gov.in');
+      setPassword('Admin@1234');
+    } else {
+      setEmail('citizen@dibrugarh.in');
+      setPassword('Citizen@1234');
     }
   };
 
@@ -132,6 +147,29 @@ export const Login = () => {
                 </>
               )}
             </button>
+
+            {/* Quick Demo Fill Buttons */}
+            <div className="pt-2 border-t border-slate-800">
+              <span className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center mb-2">
+                Or Quick Fill Demo Profile:
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => fillDemoAccount('citizen')}
+                  className="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-semibold border border-slate-700 flex items-center justify-center gap-1 transition-colors"
+                >
+                  <span>👤 Citizen User</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fillDemoAccount('municipal')}
+                  className="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-semibold border border-slate-700 flex items-center justify-center gap-1 transition-colors"
+                >
+                  <span>🏛️ Municipal Officer</span>
+                </button>
+              </div>
+            </div>
 
           </form>
 

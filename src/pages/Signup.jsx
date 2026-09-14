@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Droplets, User, Mail, Lock, ArrowRight, AlertCircle, CheckCircle2, MapPin } from 'lucide-react';
+import { Droplets, User, Mail, Lock, ArrowRight, AlertCircle, CheckCircle2, MapPin, Building2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 export const Signup = () => {
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
+  const [role, setRole] = useState('CITIZEN');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,11 +37,12 @@ export const Signup = () => {
     setError(null);
 
     try {
-      const res = await signUp({ fullName, email, password });
-      setSuccessMsg(res.message || 'Account created successfully. Redirecting to dashboard...');
+      const res = await signUp({ fullName, email, password, role });
+      const targetPath = role === 'MUNICIPAL_AUTHORITY' ? '/municipal' : '/dashboard';
+      setSuccessMsg(res.message || `Account created successfully (${role === 'MUNICIPAL_AUTHORITY' ? 'Municipal Authority' : 'Citizen'}). Redirecting...`);
       setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
+        navigate(targetPath);
+      }, 1200);
     } catch (err) {
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {
@@ -102,6 +104,42 @@ export const Signup = () => {
 
           <form onSubmit={handleSubmit} className="space-y-3.5">
             
+            {/* Account Role Selector */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                Account Type
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRole('CITIZEN')}
+                  className={`p-2.5 rounded-xl border flex flex-col items-center gap-1 transition-all text-center ${
+                    role === 'CITIZEN'
+                      ? 'bg-sky-500/20 border-sky-400 text-white shadow-sm'
+                      : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <User className="w-4 h-4 text-sky-400" />
+                  <span className="text-xs font-bold">Citizen</span>
+                  <span className="text-[10px] text-slate-400 leading-none">Report incidents</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRole('MUNICIPAL_AUTHORITY')}
+                  className={`p-2.5 rounded-xl border flex flex-col items-center gap-1 transition-all text-center ${
+                    role === 'MUNICIPAL_AUTHORITY'
+                      ? 'bg-amber-500/20 border-amber-400 text-white shadow-sm'
+                      : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Building2 className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-bold">Municipal Dept</span>
+                  <span className="text-[10px] text-slate-400 leading-none">Dispatch & resolve</span>
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
                 Full Name

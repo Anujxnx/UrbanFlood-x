@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, LogOut, ShieldAlert, Database } from 'lucide-react';
+import { Bell, LogOut, ShieldAlert, Database, Building2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { isDemoMode } from '../../lib/supabase';
 
@@ -53,8 +53,19 @@ export const Navbar = ({ activeTab = 'Overview', onTabChange, onOpenReportModal 
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
+          {/* Direct link to Municipal Authority Portal */}
+          <Link
+            to="/municipal"
+            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold transition-all shadow-sm"
+            title="Switch to Municipal Operations Dashboard"
+          >
+            <Building2 className="w-3.5 h-3.5 text-blue-600" />
+            <span className="hidden sm:inline">Municipal Portal</span>
+            <span className="sm:hidden">Gov</span>
+          </Link>
+
           {isDemoMode && (
-            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200" title="Offline Demo Mode">
+            <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200" title="Offline Demo Mode">
               <Database className="w-3 h-3 text-amber-600" />
               Demo
             </span>
@@ -103,18 +114,19 @@ export const Navbar = ({ activeTab = 'Overview', onTabChange, onOpenReportModal 
       {/* 2. Clean Segmented Mode Switch */}
       {onTabChange && (
         <div className="max-w-md md:max-w-4xl mx-auto px-5 pb-3">
-          <div className="bg-brand-ink/5 p-1 rounded-2xl flex items-center gap-1">
+          <div className="bg-brand-ink/5 p-1 rounded-2xl flex items-center gap-1 overflow-x-auto scrollbar-none">
             {[
               { id: 'Overview', label: 'Overview' },
               { id: 'Map View', label: 'Map View' },
               { id: 'Flood-Safe Route', label: 'Flood-Safe Route' },
               { id: 'Nowcast', label: 'Nowcast' },
-              { id: 'Dispatches', label: 'Dispatches' }
+              { id: 'Dispatches', label: 'Dispatches' },
+              { id: 'My Reports', label: 'My Reports' }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-xl transition-all text-center truncate ${
+                className={`flex-1 min-w-[72px] py-1.5 text-[11px] sm:text-xs font-semibold rounded-xl transition-all text-center truncate ${
                   activeTab === tab.id
                     ? 'text-white bg-brand-teal shadow-sm'
                     : 'text-brand-ink/70 hover:text-brand-ink'

@@ -6,6 +6,7 @@ import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { Dashboard } from './pages/Dashboard';
+import { MunicipalDashboard } from './pages/MunicipalDashboard';
 import { MagneticCursor } from '@/components/ui/magnetic-cursor';
 import { isDemoMode } from './lib/supabase';
 import { RefreshCw } from 'lucide-react';
@@ -53,6 +54,14 @@ export function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/municipal"
+              element={
+                <ProtectedRoute>
+                  <MunicipalDashboard />
                 </ProtectedRoute>
               }
             />

@@ -80,6 +80,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const switchRole = async (newRole) => {
+    setLoading(true);
+    try {
+      const updatedUser = await authService.switchRole(newRole);
+      if (updatedUser) {
+        setUser({ ...updatedUser });
+      }
+      return updatedUser;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetPassword = async (email) => {
     return await authService.resetPassword(email);
   };
@@ -88,13 +101,16 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
+        role: user?.role || 'citizen',
+        isMunicipal: user?.role === 'municipal_authority',
         session,
         loading,
         isAuthenticated: !!user,
         signUp,
         signIn,
         signOut,
-        resetPassword
+        resetPassword,
+        switchRole
       }}
     >
       {children}

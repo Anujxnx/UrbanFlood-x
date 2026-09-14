@@ -145,6 +145,7 @@ export const reportService = {
             id: r.id,
             incident_id: r.incident_id || `WF-2026-${String(r.id).slice(0, 5)}`,
             user_name: r.user_name || 'Community Contributor',
+            user_id: r.user_id || null,
             location_name: r.location_name || r.areas?.name || 'Dibrugarh Area',
             area_name: r.location_name || r.areas?.name || 'Dibrugarh Area',
             severity: (r.severity || 'HIGH').toUpperCase(),
@@ -153,7 +154,12 @@ export const reportService = {
             longitude: Number(r.longitude),
             image_url: r.image_url || null,
             status: r.status || 'Pending',
-            created_at: r.created_at
+            assigned_team: r.assigned_team || null,
+            priority: r.priority || (r.severity === 'CRITICAL' ? 'CRITICAL' : 'MEDIUM'),
+            municipal_action: r.municipal_action || null,
+            created_at: r.created_at,
+            updated_at: r.updated_at || r.created_at,
+            resolved_at: r.resolved_at || null
           }));
         }
       } catch (e) {
@@ -230,7 +236,12 @@ export const reportService = {
       longitude: Number(longitude),
       image_url: image_url || null,
       status: 'Pending',
-      created_at: new Date().toISOString()
+      assigned_team: null,
+      priority: severity === 'CRITICAL' ? 'CRITICAL' : 'MEDIUM',
+      municipal_action: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      resolved_at: null
     };
 
     // 1. Attempt insertion into Supabase
@@ -247,7 +258,8 @@ export const reportService = {
           latitude: newReport.latitude,
           longitude: newReport.longitude,
           image_url: newReport.image_url,
-          status: 'Pending'
+          status: 'Pending',
+          priority: newReport.priority
         })
         .select();
 
@@ -264,6 +276,16 @@ export const reportService = {
     const currentStored = getStoredLocalReports();
     currentStored.unshift(newReport);
     saveStoredLocalReports(currentStored);
+
+    // 3. Track in user's personal submitted reports for Citizen "My Reports"
+    try {
+      const mySubmissions = JSON.parse(localStorage.getItem('my_submitted_report_ids') || '[]');
+      mySubmissions.unshift(newReport.incident_id);
+      mySubmissions.unshift(newReport.id);
+      localStorage.setItem('my_submitted_report_ids', JSON.stringify(mySubmissions));
+    } catch (e) {
+      console.warn('Error saving to my_submitted_report_ids:', e);
+    }
 
     return newReport;
   },
@@ -340,5 +362,125 @@ export const reportService = {
     }
 
     return true;
+  },
+
+  /**
+   * Comprehensive Municipal Incident Action update
+   * Updates status, municipal action, assigned response team, and priority
+   */
+  async updateMunicipalIncident(reportId, { status, municipal_action, assigned_team, priority }) {
+    if (!reportId) throw new Error('Report ID required');
+
+    const idStr = String(reportId);
+    const nowIso = new Date().toISOString();
+    const isResolved = status === 'Resolved' || status === 'RESOLVED';
+
+    const updates = {
+      status: status || 'Pending',
+      updated_at: nowIso
+    };
+
+    if (municipal_action !== undefined) updates.municipal_action = municipal_action;
+    if (assigned_team !== undefined) updates.assigned_team = assigned_team;
+    if (priority !== undefined) updates.priority = priority;
+    if (isResolved) updates.resolved_at = nowIso;
+
+    // 1. Update in Supabase
+    if (!isDemoMode) {
+      try {
+        await supabase
+          .from('user_reports')
+          .update(updates)
+          .or(`id.eq.${idStr},incident_id.eq.${idStr}`);
+      } catch (e) {
+        console.warn('Supabase municipal incident update notice:', e);
+      }
+    }
+
+    // 2. Update in localStorage cache
+    const currentStored = getStoredLocalReports();
+    let targetReport = null;
+    const updatedList = currentStored.map(rep => {
+      if (String(rep.id) === idStr || String(rep.incident_id) === idStr) {
+        const merged = { ...rep, ...updates };
+        targetReport = merged;
+        return merged;
+      }
+      return rep;
+    });
+
+    if (targetReport) {
+      saveStoredLocalReports(updatedList);
+    } else {
+      // If report was from demo data, persist this update
+      const allReps = await this.getReports();
+      const matched = allReps.find(r => String(r.id) === idStr || String(r.incident_id) === idStr);
+      if (matched) {
+        const updated = { ...matched, ...updates };
+        currentStored.unshift(updated);
+        saveStoredLocalReports(currentStored);
+        targetReport = updated;
+      }
+    }
+
+    return targetReport || { id: reportId, ...updates };
+  },
+
+  /**
+   * Get Real-Time Municipal Incident Aggregated Statistics
+   */
+  async getMunicipalStats() {
+    const allReports = await this.getReports();
+    
+    let total = allReports.length;
+    let pending = 0;
+    let underReview = 0;
+    let dispatched = 0;
+    let inProgress = 0;
+    let resolved = 0;
+    let critical = 0;
+
+    for (const r of allReports) {
+      const st = (r.status || 'Pending').toLowerCase();
+      const sev = (r.severity || '').toUpperCase();
+
+      if (st.includes('pending')) pending++;
+      else if (st.includes('review')) underReview++;
+      else if (st.includes('dispatch')) dispatched++;
+      else if (st.includes('progress')) inProgress++;
+      else if (st.includes('resolve')) resolved++;
+
+      if (sev === 'CRITICAL' || r.priority === 'CRITICAL') critical++;
+    }
+
+    return {
+      total,
+      pending,
+      underReview,
+      dispatched,
+      inProgress,
+      resolved,
+      critical
+    };
+  },
+
+  /**
+   * Get reports submitted by a specific citizen
+   */
+  async getCitizenReports(userId = null) {
+    const allReports = await this.getReports();
+    let mySubmissions = [];
+    try {
+      mySubmissions = JSON.parse(localStorage.getItem('my_submitted_report_ids') || '[]');
+    } catch (e) {}
+
+    // Match by user_id OR by submitted report IDs stored in local session
+    return allReports.filter(r => {
+      if (userId && (r.user_id === userId || r.user_id === String(userId))) return true;
+      if (mySubmissions.includes(String(r.id)) || mySubmissions.includes(String(r.incident_id))) return true;
+      // In demo mode for citizen role, also match 'You (Citizen Report)'
+      if (r.user_name?.includes('You') || r.user_name?.includes('Citizen')) return true;
+      return false;
+    });
   }
 };
