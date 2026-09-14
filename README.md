@@ -25,6 +25,7 @@ Provides street/location-level flood risk instead of only city-wide warnings.
 Connects flood prediction with flood-aware alternative routing.
 Designed to integrate citizen reports for continuous ground-level validation.
 Modular architecture allows adaptation to different cities.
+
 ⚙️ Technical Approach
 Rainfall / Radar
 ↓ 
