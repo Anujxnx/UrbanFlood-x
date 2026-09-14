@@ -88,31 +88,31 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
     : 'Recent';
 
   const severityBadgeColor = 
-    report.severity === 'CRITICAL' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
-    report.severity === 'HIGH' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/40' :
-    report.severity === 'MODERATE' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' :
-    'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
+    report.severity === 'CRITICAL' ? 'bg-red-50 text-red-700 border border-red-200' :
+    report.severity === 'HIGH' ? 'bg-orange-50 text-orange-700 border border-orange-200' :
+    report.severity === 'MODERATE' ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' :
+    'bg-emerald-50 text-[#2A835F] border border-emerald-200';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#092328]/85 backdrop-blur-md overflow-y-auto">
-      <div className="bg-[#0c2e35] border border-[#12544F] rounded-3xl max-w-2xl w-full p-5 sm:p-7 shadow-2xl relative my-auto max-h-[94vh] flex flex-col font-sans text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#092328]/60 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white border border-[#8BBB92]/30 rounded-3xl max-w-2xl w-full p-5 sm:p-7 shadow-2xl relative my-auto max-h-[94vh] flex flex-col font-sans text-[#092328]">
         
         {/* Header */}
-        <div className="flex items-start justify-between pb-4 border-b border-[#12544F] shrink-0">
+        <div className="flex items-start justify-between pb-4 border-b border-[#8BBB92]/25 shrink-0">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-xs font-bold text-[#8BBB92] bg-[#12544F]/60 px-2.5 py-0.5 rounded-lg border border-[#2A835F]/40">
+              <span className="font-mono text-xs font-bold text-[#12544F] bg-[#8BBB92]/20 px-2.5 py-0.5 rounded-lg border border-[#8BBB92]/40">
                 {report.incident_id || 'WF-INCIDENT'}
               </span>
               <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${severityBadgeColor}`}>
                 {report.severity} SEVERITY
               </span>
-              <span className="text-[11px] font-semibold text-[#8BBB92]">
-                Priority: <span className="text-white font-bold">{priority}</span>
+              <span className="text-[11px] font-semibold text-[#092328]/70">
+                Priority: <span className="text-[#092328] font-bold">{priority}</span>
               </span>
             </div>
 
-            <h3 className="text-lg sm:text-xl font-bold text-white mt-1.5 flex items-center gap-2">
+            <h3 className="text-lg sm:text-xl font-bold text-[#092328] mt-1.5 flex items-center gap-2">
               <span>📍 {report.location_name || report.area_name || 'Dibrugarh Sector'}</span>
             </h3>
           </div>
@@ -120,7 +120,7 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-[#8BBB92] hover:text-white rounded-xl bg-[#092328] hover:bg-[#12544F] border border-[#12544F] transition-colors cursor-pointer"
+            className="p-1.5 text-[#092328]/60 hover:text-[#092328] rounded-xl bg-[#F6FAF8] hover:bg-[#8BBB92]/20 border border-[#8BBB92]/30 transition-colors cursor-pointer"
             title="Close"
           >
             <X className="w-4 h-4" />
@@ -134,10 +134,10 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
           {feedback && (
             <div className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
               feedback.type === 'success' 
-                ? 'bg-[#2A835F]/20 border border-[#2A835F]/50 text-[#8BBB92]' 
-                : 'bg-red-500/20 border border-red-500/40 text-red-300'
+                ? 'bg-emerald-50 border border-emerald-200 text-[#12544F]' 
+                : 'bg-red-50 border border-red-200 text-red-700'
             }`}>
-              {feedback.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-[#2A835F]" /> : <AlertTriangle className="w-4 h-4 text-red-400" />}
+              {feedback.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-[#2A835F]" /> : <AlertTriangle className="w-4 h-4 text-red-600" />}
               <span>{feedback.text}</span>
             </div>
           )}
@@ -146,7 +146,7 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             {/* Uploaded Citizen Photo */}
-            <div className="rounded-2xl overflow-hidden border border-[#12544F] bg-[#092328] relative group">
+            <div className="rounded-2xl overflow-hidden border border-[#8BBB92]/30 bg-[#F6FAF8] relative group shadow-sm">
               {report.image_url ? (
                 <div className="relative h-48 sm:h-56">
                   <img
@@ -158,53 +158,53 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
                     href={report.image_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-black/75 hover:bg-black/90 text-white text-[10px] font-semibold flex items-center gap-1 backdrop-blur-sm transition-colors cursor-pointer"
+                    className="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-[#092328]/85 hover:bg-[#092328] text-white text-[10px] font-semibold flex items-center gap-1 backdrop-blur-sm transition-colors cursor-pointer"
                   >
                     <span>Inspect Full Photo</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
               ) : (
-                <div className="h-48 sm:h-56 flex flex-col items-center justify-center p-6 text-center text-[#8BBB92]">
-                  <ShieldAlert className="w-8 h-8 text-[#2A835F] mb-2" />
-                  <p className="text-xs">No citizen image attached to this report.</p>
+                <div className="h-48 sm:h-56 flex flex-col items-center justify-center p-6 text-center text-[#092328]/60">
+                  <ShieldAlert className="w-8 h-8 text-[#12544F] mb-2" />
+                  <p className="text-xs font-medium">No citizen image attached to this report.</p>
                 </div>
               )}
             </div>
 
             {/* Incident Metadata Box */}
-            <div className="bg-[#092328] border border-[#12544F] rounded-2xl p-4 flex flex-col justify-between space-y-3">
+            <div className="bg-[#F6FAF8] border border-[#8BBB92]/25 rounded-2xl p-4 flex flex-col justify-between space-y-3">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8BBB92] block mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#12544F] block mb-1">
                   Citizen Field Observation
                 </span>
-                <p className="text-xs text-white font-medium leading-relaxed italic bg-[#0c2e35] p-2.5 rounded-xl border border-[#12544F]">
+                <p className="text-xs text-[#092328] font-medium leading-relaxed italic bg-white p-2.5 rounded-xl border border-[#8BBB92]/25">
                   "{report.description || 'No description provided.'}"
                 </p>
               </div>
 
-              <div className="space-y-1.5 text-xs text-[#8BBB92] pt-2 border-t border-[#12544F]">
+              <div className="space-y-1.5 text-xs text-[#092328]/70 pt-2 border-t border-[#8BBB92]/20">
                 <div className="flex items-center justify-between">
-                  <span className="text-[#8BBB92] flex items-center gap-1">
-                    <User className="w-3 h-3 text-[#2A835F]" /> Reporter:
+                  <span className="text-[#092328]/60 flex items-center gap-1">
+                    <User className="w-3 h-3 text-[#12544F]" /> Reporter:
                   </span>
-                  <span className="font-semibold text-white truncate max-w-[140px]">
+                  <span className="font-semibold text-[#092328] truncate max-w-[140px]">
                     {report.user_name || 'Citizen Contributor'}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-[#8BBB92] flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-[#2A835F]" /> Reported Time:
+                  <span className="text-[#092328]/60 flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-[#12544F]" /> Reported Time:
                   </span>
-                  <span className="font-semibold text-white">{formattedDate}</span>
+                  <span className="font-semibold text-[#092328]">{formattedDate}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-[#8BBB92] flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-[#2A835F]" /> GPS Location:
+                  <span className="text-[#092328]/60 flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-[#12544F]" /> GPS Location:
                   </span>
-                  <span className="font-mono text-white text-[11px]">
+                  <span className="font-mono text-[#092328] text-[11px] font-bold">
                     {Number(report.latitude).toFixed(4)}° N, {Number(report.longitude).toFixed(4)}° E
                   </span>
                 </div>
@@ -214,10 +214,10 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
           </div>
 
           {/* Form: Municipal Authority Action & Dispatch Controls */}
-          <form onSubmit={handleUpdate} className="bg-[#092328] border border-[#12544F] rounded-2xl p-4 sm:p-5 space-y-4">
+          <form onSubmit={handleUpdate} className="bg-[#F6FAF8] border border-[#8BBB92]/30 rounded-2xl p-4 sm:p-5 space-y-4">
             
-            <div className="flex items-center gap-2 pb-2 border-b border-[#12544F] text-xs font-bold text-white uppercase tracking-wider">
-              <Truck className="w-4 h-4 text-[#2A835F]" />
+            <div className="flex items-center gap-2 pb-2 border-b border-[#8BBB92]/20 text-xs font-bold text-[#092328] uppercase tracking-wider">
+              <Truck className="w-4 h-4 text-[#12544F]" />
               <span>Municipal Operations & Dispatch Action</span>
             </div>
 
@@ -225,13 +225,13 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
               
               {/* Status Selector */}
               <div>
-                <label className="block text-xs font-semibold text-[#8BBB92] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-[#12544F] uppercase tracking-wider mb-1">
                   Incident Status
                 </label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full p-2.5 bg-[#0c2e35] border border-[#12544F] rounded-xl text-xs text-white font-semibold focus:outline-none focus:border-[#2A835F] cursor-pointer"
+                  className="w-full p-2.5 bg-white border border-[#8BBB92]/40 rounded-xl text-xs text-[#092328] font-semibold focus:outline-none focus:border-[#12544F] cursor-pointer shadow-sm"
                   id="municipal-status-select"
                 >
                   <option value="Pending">⚪ PENDING</option>
@@ -245,13 +245,13 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
 
               {/* Priority Selector */}
               <div>
-                <label className="block text-xs font-semibold text-[#8BBB92] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-[#12544F] uppercase tracking-wider mb-1">
                   Response Priority
                 </label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="w-full p-2.5 bg-[#0c2e35] border border-[#12544F] rounded-xl text-xs text-white font-semibold focus:outline-none focus:border-[#2A835F] cursor-pointer"
+                  className="w-full p-2.5 bg-white border border-[#8BBB92]/40 rounded-xl text-xs text-[#092328] font-semibold focus:outline-none focus:border-[#12544F] cursor-pointer shadow-sm"
                   id="municipal-priority-select"
                 >
                   <option value="CRITICAL">🔴 CRITICAL</option>
@@ -263,7 +263,7 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
 
               {/* Response Squad Assignment */}
               <div>
-                <label className="block text-xs font-semibold text-[#8BBB92] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-[#12544F] uppercase tracking-wider mb-1">
                   Assigned Team
                 </label>
                 <input
@@ -272,7 +272,7 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
                   value={assignedTeam}
                   onChange={(e) => setAssignedTeam(e.target.value)}
                   placeholder="Select or enter team..."
-                  className="w-full p-2.5 bg-[#0c2e35] border border-[#12544F] rounded-xl text-xs text-white placeholder-[#8BBB92]/50 focus:outline-none focus:border-[#2A835F]"
+                  className="w-full p-2.5 bg-white border border-[#8BBB92]/40 rounded-xl text-xs text-[#092328] placeholder-[#092328]/40 focus:outline-none focus:border-[#12544F] shadow-sm font-semibold"
                   id="municipal-assigned-team-input"
                 />
                 <datalist id="response-teams-list">
@@ -287,10 +287,10 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
             {/* Action Taken Field */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-semibold text-[#8BBB92] uppercase tracking-wider">
+                <label className="block text-xs font-bold text-[#12544F] uppercase tracking-wider">
                   Official Action Taken & Instructions
                 </label>
-                <span className="text-[10px] text-[#8BBB92]/70">
+                <span className="text-[10px] text-[#092328]/60 font-medium">
                   Visible to reporting citizen in "My Reports"
                 </span>
               </div>
@@ -299,7 +299,7 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
                 value={municipalAction}
                 onChange={(e) => setMunicipalAction(e.target.value)}
                 placeholder="Example: Drainage response team dispatched to Lachit Nagar to clear blocked drainage culverts..."
-                className="w-full p-3 bg-[#0c2e35] border border-[#12544F] rounded-xl text-xs text-white placeholder-[#8BBB92]/50 focus:outline-none focus:border-[#2A835F] leading-relaxed font-medium"
+                className="w-full p-3 bg-white border border-[#8BBB92]/40 rounded-xl text-xs text-[#092328] placeholder-[#092328]/40 focus:outline-none focus:border-[#12544F] leading-relaxed font-medium shadow-sm"
                 id="municipal-action-input"
               />
             </div>
@@ -310,7 +310,7 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-[#8BBB92] hover:text-white transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-[#092328]/60 hover:text-[#092328] transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -318,7 +318,7 @@ export const MunicipalIncidentModal = ({ report, isOpen, onClose, onIncidentUpda
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#12544F] to-[#2A835F] hover:brightness-110 text-white text-xs font-bold shadow-lg shadow-[#12544F]/40 transition-all cursor-pointer disabled:opacity-50"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#12544F] hover:bg-[#12544F]/90 text-white text-xs font-bold shadow-md shadow-[#12544F]/20 transition-all cursor-pointer disabled:opacity-50"
                 id="submit-municipal-update-btn"
               >
                 {loading ? (
