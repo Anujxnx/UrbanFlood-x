@@ -3,6 +3,7 @@ import { Navbar } from '../components/Navbar/Navbar';
 import { DibrugarhMap } from '../components/Map/DibrugarhMap';
 import { AreaDetailsPanel } from '../components/AreaDetails/AreaDetailsPanel';
 import { ReportModal } from '../components/ReportForm/ReportModal';
+import { ReportDetailsModal } from '../components/ReportDetails/ReportDetailsModal';
 import { FloodSafeRoutePage } from './FloodSafeRoutePage';
 import { areaService } from '../services/areaService';
 import { rainfallService } from '../services/rainfallService';
@@ -25,7 +26,12 @@ import {
   AlertTriangle,
   CheckCircle2,
   ShieldCheck,
-  Navigation
+  Navigation,
+  Camera,
+  ShieldAlert,
+  Eye,
+  Truck,
+  Trash2
 } from 'lucide-react';
 
 export const Dashboard = () => {
@@ -43,8 +49,10 @@ export const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Overview');
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [selectedReportForView, setSelectedReportForView] = useState(null);
   const [showDetailsPanel, setShowDetailsPanel] = useState(false);
   const [deploySuccess, setDeploySuccess] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   // Map layer toggle state
   const [activeLayers, setActiveLayers] = useState({
@@ -125,6 +133,46 @@ export const Dashboard = () => {
   const handleReportSubmitted = async () => {
     const updatedReports = await reportService.getReports();
     setReports(updatedReports);
+  };
+
+  const handleReportStatusUpdated = (updated) => {
+    setReports(prev => prev.map(r => ((r.id === updated.id || r.incident_id === updated.incident_id) ? updated : r)));
+    if (selectedReportForView && (selectedReportForView.id === updated.id || selectedReportForView.incident_id === updated.incident_id)) {
+      setSelectedReportForView(updated);
+    }
+  };
+
+  const handleQuickDispatchReport = async (report) => {
+    try {
+      await reportService.updateReportStatus(report.id || report.incident_id, 'Dispatched');
+      const updated = { ...report, status: 'Dispatched' };
+      handleReportStatusUpdated(updated);
+    } catch (err) {
+      console.error('Quick dispatch failed:', err);
+    }
+  };
+
+  const handleDeleteReport = async (report) => {
+    const reportId = report.incident_id || report.id;
+    try {
+      await reportService.deleteReport(reportId);
+      setReports(prev => prev.filter(r => 
+        String(r.id) !== String(reportId) && 
+        String(r.incident_id) !== String(reportId) && 
+        String(r.id) !== String(report.id) && 
+        String(r.incident_id) !== String(report.incident_id)
+      ));
+      if (selectedReportForView && (
+        String(selectedReportForView.id) === String(report.id) || 
+        String(selectedReportForView.incident_id) === String(report.incident_id) || 
+        String(selectedReportForView.incident_id) === String(reportId)
+      )) {
+        setSelectedReportForView(null);
+      }
+      setConfirmDeleteId(null);
+    } catch (err) {
+      console.error('Failed to delete report:', err);
+    }
   };
 
   const riskProb = prediction?.waterlogging_probability ?? selectedArea?.waterlogging_probability ?? 78;
@@ -333,6 +381,7 @@ export const Dashboard = () => {
                   roads={roads}
                   drainage={drainage}
                   reports={reports}
+                  onSelectReport={(rep) => setSelectedReportForView(rep)}
                 />
 
                 {/* IMD District Nowcast Alert Badge */}
@@ -422,14 +471,153 @@ export const Dashboard = () => {
           {(activeTab === 'Overview' || activeTab === 'Dispatches') && (
             <section className="flex flex-col gap-3">
               <div className="flex items-center justify-between px-1">
-                <h3 className="text-sm font-bold text-brand-ink tracking-tight">Active Dispatches</h3>
-                <span className="text-[11px] font-semibold text-brand-teal">2 Scheduled</span>
+                <div>
+                  <h3 className="text-sm font-bold text-brand-ink tracking-tight">Active Dispatches & Incident Reports</h3>
+                  <p className="text-[11px] text-brand-ink/50">Municipal response squads & citizen waterlogging dispatches</p>
+                </div>
+                <button
+                  onClick={() => setIsReportModalOpen(true)}
+                  className="px-2.5 py-1 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                  id="dispatch-report-btn"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>Report Incident</span>
+                </button>
               </div>
 
-              {/* Priority Item 01 */}
+              {/* Crowdsourced Citizen Incident Reports */}
+              {reports && reports.length > 0 && reports.map((rep) => {
+                const sev = (rep.severity || 'HIGH').toUpperCase();
+                const sevColor = sev === 'CRITICAL' ? 'bg-red-500/15 text-red-600 border-red-500/30' :
+                  sev === 'HIGH' ? 'bg-orange-500/15 text-orange-600 border-orange-500/30' :
+                  sev === 'MODERATE' || sev === 'MEDIUM' ? 'bg-yellow-500/15 text-yellow-700 border-yellow-500/30' :
+                  'bg-emerald-500/15 text-emerald-700 border-emerald-500/30';
+                
+                const statusBadge = 
+                  rep.status === 'Dispatched' ? 'bg-brand-teal text-white' :
+                  rep.status === 'Resolved' ? 'bg-emerald-600 text-white' :
+                  rep.status === 'Under Review' ? 'bg-amber-500 text-white' :
+                  'bg-red-500 text-white';
+
+                return (
+                  <div 
+                    key={`dispatch-rep-${rep.incident_id || rep.id}`}
+                    className="bg-white rounded-2xl p-4 shadow-sm border border-brand-sage/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-brand-teal/40 transition-colors"
+                  >
+                    <div className="flex items-start gap-3 min-w-0">
+                      {rep.image_url ? (
+                        <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-slate-200 shrink-0 bg-slate-900 group">
+                          <img 
+                            src={rep.image_url} 
+                            alt="Incident" 
+                            className="w-full h-full object-cover" 
+                          />
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-white text-[9px]">
+                            <Camera className="w-3.5 h-3.5 text-white/90" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center shrink-0">
+                          <ShieldAlert className="w-6 h-6" />
+                        </div>
+                      )}
+
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                          <span className="font-mono text-[10px] font-bold text-brand-teal bg-brand-teal/10 px-1.5 py-0.5 rounded border border-brand-teal/20">
+                            {rep.incident_id || 'WF-INCIDENT'}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${sevColor}`}>
+                            {sev}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusBadge}`}>
+                            {rep.status || 'Pending'}
+                          </span>
+                          {rep.image_url && (
+                            <span className="text-[10px] text-slate-500 flex items-center gap-0.5 font-medium">
+                              📷 Image attached
+                            </span>
+                          )}
+                        </div>
+
+                        <h4 className="text-xs font-bold text-brand-ink truncate">
+                          📍 {rep.location_name || rep.area_name}
+                        </h4>
+                        <p className="text-[11px] text-brand-ink/70 line-clamp-2 mt-0.5 leading-snug">
+                          "{rep.description}"
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 sm:gap-2 self-end sm:self-center shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedReportForView(rep)}
+                        className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                        title="View Report Details"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View</span>
+                      </button>
+
+                      {rep.status !== 'Dispatched' && rep.status !== 'Resolved' && (
+                        <button
+                          type="button"
+                          onClick={() => handleQuickDispatchReport(rep)}
+                          className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-brand-teal hover:bg-brand-teal/90 text-white text-xs font-semibold flex items-center gap-1 shadow-sm transition-colors cursor-pointer"
+                          title="Dispatch Team"
+                        >
+                          <Truck className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Dispatch</span>
+                        </button>
+                      )}
+
+                      {confirmDeleteId === (rep.incident_id || rep.id) ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReport(rep)}
+                            className="px-2.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all cursor-pointer shadow-sm animate-pulse"
+                            id={`confirm-delete-${rep.incident_id || rep.id}`}
+                          >
+                            Confirm?
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="px-2 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-medium transition-all cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(rep.incident_id || rep.id)}
+                          className="px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                          title="Delete Incident Report"
+                          id={`delete-report-${rep.incident_id || rep.id}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Delete</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {(!reports || reports.length === 0) && (
+                <div className="bg-white rounded-2xl p-6 text-center border border-dashed border-brand-sage/40">
+                  <p className="text-xs font-semibold text-brand-ink/60">No active waterlogging reports.</p>
+                  <p className="text-[11px] text-brand-ink/40 mt-1">All monitored zones are currently clear or reported incidents have been resolved.</p>
+                </div>
+              )}
+
+              {/* Scheduled Priority Item 01 */}
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-brand-sage/25 flex items-center justify-between gap-3 hover:border-brand-teal/40 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-sm font-bold text-brand-teal/50 font-mono">01</span>
+                  <span className="text-sm font-bold text-brand-teal/50 font-mono">P-01</span>
                   <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-2">
                       <h4 className="text-xs font-bold text-brand-ink truncate">Lachit Nagar · Pump Unit 04</h4>
@@ -448,10 +636,10 @@ export const Dashboard = () => {
                 </button>
               </div>
 
-              {/* Priority Item 02 */}
+              {/* Scheduled Priority Item 02 */}
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-brand-sage/25 flex items-center justify-between gap-3 hover:border-brand-teal/40 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-sm font-bold text-brand-ink/30 font-mono">02</span>
+                  <span className="text-sm font-bold text-brand-ink/30 font-mono">P-02</span>
                   <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-2">
                       <h4 className="text-xs font-bold text-brand-ink truncate">Mancotta Sluice Gate #02</h4>
@@ -538,6 +726,16 @@ export const Dashboard = () => {
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         onReportSubmitted={handleReportSubmitted}
+        onReportDeleted={handleReportSubmitted}
+      />
+
+      {/* Report Details & Status Management Modal */}
+      <ReportDetailsModal
+        report={selectedReportForView}
+        isOpen={Boolean(selectedReportForView)}
+        onClose={() => setSelectedReportForView(null)}
+        onStatusUpdated={handleReportStatusUpdated}
+        onReportDeleted={handleDeleteReport}
       />
     </div>
   );

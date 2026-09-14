@@ -28,16 +28,20 @@ const createRiskIcon = (riskLevel) => {
 };
 
 const createReportIcon = (severity) => {
-  let color = '#ef4444';
-  if (severity === 'HIGH') color = '#f97316';
-  if (severity === 'MEDIUM') color = '#eab308';
+  let color = '#ef4444'; // CRITICAL
+  const sev = (severity || 'HIGH').toUpperCase();
+  if (sev === 'LOW') color = '#2A835F';
+  else if (sev === 'MODERATE' || sev === 'MEDIUM') color = '#eab308';
+  else if (sev === 'HIGH') color = '#f97316';
+  else if (sev === 'CRITICAL') color = '#ef4444';
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="${color}" stroke="#ffffff" stroke-width="2" class="animate-pulse"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="${color}" stroke="#ffffff" stroke-width="2.5" class="filter drop-shadow-md animate-pulse"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/></svg>`;
   return L.divIcon({
     className: 'custom-report-marker',
     html: svg,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14]
   });
 };
 
@@ -73,7 +77,8 @@ export const DibrugarhMap = ({
   drainage = [],
   reports = [],
   activeRoutes = [],
-  selectedRoute
+  selectedRoute,
+  onSelectReport
 }) => {
   const dibrugarhCenter = [27.4728, 94.9120];
   const activeCenter = selectedArea
@@ -238,25 +243,70 @@ export const DibrugarhMap = ({
         ))}
 
         {/* LAYER 4: Crowdsourced User Reports */}
-        {activeLayers.reports && reports.map((rep) => (
-          <Marker
-            key={`rep-${rep.id}`}
-            position={[rep.latitude, rep.longitude]}
-            icon={createReportIcon(rep.severity)}
-          >
-            <Popup>
-              <div className="p-1 font-sans text-xs text-slate-900">
-                <div className="font-extrabold text-red-600">
-                  Reported Waterlogging ({rep.severity})
+        {activeLayers.reports && reports.map((rep) => {
+          const sev = (rep.severity || 'HIGH').toUpperCase();
+          const sevColor = sev === 'CRITICAL' ? '#ef4444' : sev === 'HIGH' ? '#f97316' : sev === 'MODERATE' || sev === 'MEDIUM' ? '#eab308' : '#2A835F';
+          const formattedDate = rep.created_at
+            ? new Date(rep.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+            : 'Recent';
+
+          return (
+            <Marker
+              key={`rep-${rep.incident_id || rep.id}`}
+              position={[rep.latitude, rep.longitude]}
+              icon={createReportIcon(rep.severity)}
+            >
+              <Popup>
+                <div className="p-1 font-sans text-xs text-slate-900 min-w-[210px] max-w-[260px]">
+                  <div className="flex items-center justify-between gap-1 border-b border-slate-200 pb-1.5 mb-1.5">
+                    <span className="font-mono text-[10px] font-bold text-brand-teal bg-brand-teal/10 px-1.5 py-0.5 rounded">
+                      {rep.incident_id || 'WF-INCIDENT'}
+                    </span>
+                    <span 
+                      className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full text-white"
+                      style={{ backgroundColor: sevColor }}
+                    >
+                      {sev}
+                    </span>
+                  </div>
+
+                  <div className="font-bold text-xs text-slate-900 mb-0.5">
+                    📍 {rep.location_name || rep.area_name}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 mb-1.5">
+                    <span>Status: <strong className="text-slate-700">{rep.status || 'Pending'}</strong></span>
+                    <span>{formattedDate}</span>
+                  </div>
+
+                  {rep.image_url && (
+                    <div className="my-1.5 rounded-lg overflow-hidden border border-slate-200 bg-slate-900">
+                      <img
+                        src={rep.image_url}
+                        alt="Incident"
+                        className="w-full h-24 object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <p className="my-1 text-slate-700 text-[11px] bg-slate-50 p-2 rounded-lg border border-slate-200 leading-snug">
+                    "{rep.description}"
+                  </p>
+
+                  {onSelectReport && (
+                    <button
+                      type="button"
+                      onClick={() => onSelectReport(rep)}
+                      className="w-full mt-2 py-1.5 bg-brand-teal hover:bg-brand-teal/90 text-white text-[11px] font-bold rounded-lg transition-colors text-center cursor-pointer shadow-xs"
+                    >
+                      View Report Details
+                    </button>
+                  )}
                 </div>
-                <div className="text-slate-600 font-medium">{rep.area_name}</div>
-                <p className="my-1 text-slate-800 text-[11px] bg-slate-100 p-1.5 rounded">
-                  "{rep.description}"
-                </p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              </Popup>
+            </Marker>
+          );
+        })}
 
       </MapContainer>
 
