@@ -37,4 +37,24 @@ ML / Risk Engine
 ↓
 Waterlogging Probability + Flood Risk
 ↓ 
-GIS Dashboard + Safe Route Recommendation
+GIS Dashboard + Safe Route Recommendation              
+
+
+ Core Value Proposition & System Impacts
+1. Shift from Reactive to Predictive Flood Governance
+	Hyper-Local Risk Resolution: Evaluates runoff at the street and intersection level by combining micro-topography (Digital Elevation Models) with local drainage capacities.
+
+	Pre-Emptive Resource Staging: Enables urban local bodies (ULBs) and first responders (NDRF/SDRF) to pre-position de-watering pumps, boats, and rescue teams before waterlogging peaks.
+
+2. Dynamic Safety-Aware Navigation
+	Risk-Weighted Routing: Replaces standard shortest-path algorithms (A^* or Dijkstra) with real-time hazard-weighted edge costs to route traffic away from flooded bottlenecks.
+
+	Emergency Corridor Preservation: Keeps evacuation channels and critical access routes (e.g., pathways to hospitals) open during severe downpours.
+
+3. Continuous Ground-Truth Validation Loop
+	Crowdsourced Intelligence: Integrates real-time citizen reporting to confirm predicted water levels, dynamically updating confidence scores across the risk grid.
+
+	Adaptive Calibration: Uses validated flood events to retrain local ML models, improving spatial accuracy for subsequent rainfall events.
+
+
+
